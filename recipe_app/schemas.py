@@ -9,6 +9,11 @@ class RecipePost(BaseModel):
     cook_time: int
     directions: str
 
+
+class RecipeOut(RecipePost):
+    id: int
+    user_id: int
+
     class Config:
         orm_mode = True
 
@@ -22,15 +27,18 @@ class UserCreate(BaseModel):
 class UserOut(BaseModel):
     id: int
     username: str
-    email: EmailStr
 
     class Config:
         orm_mode = True
 
 
-class UserLogin(BaseModel):
+class UserOutMe(BaseModel):
+    id: int
+    username: str
     email: EmailStr
-    password: str
+
+    class Config:
+        orm_mode = True
 
 
 class Token(BaseModel):

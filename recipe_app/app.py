@@ -1,72 +1,35 @@
-from fastapi import FastAPI, Response, status, Depends, HTTPException
+from fastapi import FastAPI, Response, status, Depends, HTTPException, APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
-from .schemas import RecipePost, UserCreate, UserOut, Token, UserLogin
+from .schemas import RecipePost, UserCreate, UserOut, Token
 from .models import Recipe, User
 from .database import get_db
 from .utils import hash_password, verify_password
 from .oauth2 import create_access_token
 from sqlalchemy.orm import Session
+from .routers import auth, user, recipe
 
 app = FastAPI()
 
-
-@app.post("/login", response_model=Token)
-def user_login(
-    user_credentials: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db),
-):
-    if not (
-        user := db.query(User).filter(User.email == user_credentials.username).first()
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid Credentials",
-        )
-    if valid := verify_password(user_credentials.password, user.password):
-        access_token = create_access_token({"user_id": user.id})
-
-        return {"access_token": access_token, "token_type": "Bearer"}
-
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Invalid Credentials",
-    )
+app.include_router(auth.router)
+app.include_router(user.router)
+app.include_router(recipe.router)
 
 
-@app.get("/recipes", status_code=status.HTTP_200_OK)
-def get_all_recipes(response: Response, db: Session = Depends(get_db)):
-    recipes = []
-
-    return {"data": recipes}
+@app.get("/")
+def root():
+    return {"message": "Hello Applications!"}
 
 
-@app.post("/recipes", status_code=status.HTTP_201_CREATED)
-def post_new_recipe(recipe: RecipePost, db: Session = Depends(get_db)):
-    return []
+# @app.get("/recipes", status_code=status.HTTP_200_OK)
+# def get_all_recipes(response: Response, db: Session = Depends(get_db)):
+#     recipes = []
+
+#     return {"data": recipes}
 
 
-@app.post("/users", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
-    if user_data := db.query(User).filter(User.email == user.email).first():
-        raise HTTPException(
-            status_code=status.HTTP_208_ALREADY_REPORTED,
-            detail=f"user with email {user.email} is already present",
-        )
-
-    if user_data := db.query(User).filter(User.username == user.username).first():
-        raise HTTPException(
-            status_code=status.HTTP_208_ALREADY_REPORTED,
-            detail=f"user with username {user.username} is already present",
-        )
-
-    hashed_password = hash_password(user.password)
-    user.password = hashed_password
-
-    new_user = User(**user.dict())
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+# @app.post("/recipes", status_code=status.HTTP_201_CREATED)
+# def post_new_recipe(recipe: RecipePost, db: Session = Depends(get_db)):
+#     return []
 
 
 # @app.get("/recipes/{recipe_id}", status_code=status.HTTP_200_OK)
