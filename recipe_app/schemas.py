@@ -9,6 +9,9 @@ class RecipePost(BaseModel):
     cook_time: int
     directions: str
 
+    class Config:
+        orm_mode = True
+
 
 class RecipeOut(RecipePost):
     id: int

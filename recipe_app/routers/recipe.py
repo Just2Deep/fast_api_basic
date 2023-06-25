@@ -1,18 +1,17 @@
-from typing import Union
+from typing import List
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 
 from ..schemas import RecipePost, RecipeOut
 from ..models import Recipe
 from ..database import get_db
-from ..utils import hash_password
 from ..oauth2 import get_current_user, optional_oauth2_scheme
 
 
 router = APIRouter(prefix="/recipes", tags=["Recipe"])
 
 
-@router.get("/", response_model=list[RecipePost])
+@router.get("/", response_model=List[RecipeOut])
 def get_all_posts(db: Session = Depends(get_db)):
     if recipes := db.query(Recipe).filter_by(is_publish=True).all():
         return recipes
