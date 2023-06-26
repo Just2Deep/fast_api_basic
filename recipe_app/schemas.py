@@ -13,14 +13,6 @@ class RecipePost(BaseModel):
         orm_mode = True
 
 
-class RecipeOut(RecipePost):
-    id: int
-    user_id: int
-
-    class Config:
-        orm_mode = True
-
-
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
@@ -28,6 +20,16 @@ class UserCreate(BaseModel):
 
 
 class UserOut(BaseModel):
+    id: int
+    username: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class UserOutPost(BaseModel):
     id: int
     username: str
 
@@ -39,6 +41,19 @@ class UserOutMe(BaseModel):
     id: int
     username: str
     email: EmailStr
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class RecipeOut(RecipePost):
+    id: int
+    author: UserOutPost
+    is_publish: bool
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         orm_mode = True

@@ -47,10 +47,13 @@ def get_user(
     if user := db.query(User).filter(User.username == username).first():
         current_user = get_current_user(token, db)
         if not current_user or current_user.username != username:
-            return UserOut(id=user.id, username=user.username)
-        return UserOutMe(
-            id=current_user.id, username=current_user.username, email=current_user.email
-        )
+            return UserOut(
+                id=user.id,
+                username=user.username,
+                created_at=user.created_at,
+                updated_at=user.updated_at,
+            )
+        return current_user
 
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND, detail=f"user {username} does not exist"

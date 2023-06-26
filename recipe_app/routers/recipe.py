@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 
 from ..schemas import RecipePost, RecipeOut
-from ..models import Recipe
+from ..models import Recipe, User
 from ..database import get_db
 from ..oauth2 import get_current_user, optional_oauth2_scheme
 
@@ -14,6 +14,7 @@ router = APIRouter(prefix="/recipes", tags=["Recipe"])
 @router.get("/", response_model=List[RecipeOut])
 def get_all_posts(db: Session = Depends(get_db)):
     if recipes := db.query(Recipe).filter_by(is_publish=True).all():
+        print(recipes)
         return recipes
 
     raise HTTPException(
@@ -33,6 +34,8 @@ def create_a_post(
         db.add(new_recipe)
         db.commit()
         db.refresh(new_recipe)
+
+        new_recipe.author = user  # adding author data
 
         return new_recipe
 
@@ -56,6 +59,12 @@ def get_one_recipe(
             and current_user
             and current_user.id == recipe.user_id
         ):
+            if recipe.user_id != current_user.id:
+                user = db.query(User).filter_by(id=recipe.user_id).first()
+            else:
+                user = current_user
+
+            recipe.author = user
             return recipe
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access not allowed"
@@ -95,7 +104,7 @@ def update_a_recipe(
 @router.delete(
     "/{recipe_id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT
 )
-def update_a_recipe(
+def delete_a_recipe(
     recipe_id: int,
     token: str = Depends(optional_oauth2_scheme),
     db: Session = Depends(get_db),
@@ -121,7 +130,7 @@ def update_a_recipe(
 @router.put(
     "/{recipe_id}/publish", response_model=None, status_code=status.HTTP_204_NO_CONTENT
 )
-def update_a_recipe(
+def publish_a_recipe(
     recipe_id: int,
     token: str = Depends(optional_oauth2_scheme),
     db: Session = Depends(get_db),
@@ -148,7 +157,7 @@ def update_a_recipe(
 @router.delete(
     "/{recipe_id}/publish", response_model=None, status_code=status.HTTP_204_NO_CONTENT
 )
-def update_a_recipe(
+def unpublish_a_recipe(
     recipe_id: int,
     token: str = Depends(optional_oauth2_scheme),
     db: Session = Depends(get_db),
