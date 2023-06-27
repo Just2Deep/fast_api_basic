@@ -14,7 +14,6 @@ router = APIRouter(prefix="/recipes", tags=["Recipe"])
 @router.get("/", response_model=List[RecipeOut])
 def get_all_posts(db: Session = Depends(get_db)):
     if recipes := db.query(Recipe).filter_by(is_publish=True).all():
-        print(recipes)
         return recipes
 
     raise HTTPException(
@@ -34,8 +33,6 @@ def create_a_post(
         db.add(new_recipe)
         db.commit()
         db.refresh(new_recipe)
-
-        new_recipe.author = user  # adding author data
 
         return new_recipe
 
@@ -59,12 +56,6 @@ def get_one_recipe(
             and current_user
             and current_user.id == recipe.user_id
         ):
-            if recipe.user_id != current_user.id:
-                user = db.query(User).filter_by(id=recipe.user_id).first()
-            else:
-                user = current_user
-
-            recipe.author = user
             return recipe
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access not allowed"

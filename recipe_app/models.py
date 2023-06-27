@@ -25,7 +25,9 @@ class Recipe(Base):
         server_default=text("now()"),
         onupdate=text("now()"),
     )
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+
+    author = relationship("User", viewonly=True)
 
 
 class User(Base):
