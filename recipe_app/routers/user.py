@@ -12,7 +12,25 @@ router = APIRouter(prefix="/users", tags=["User"])
 
 
 @router.post("/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
+def create_new_user(user: UserCreate, db: Session = Depends(get_db)) -> UserOut:
+    """Create a new user
+
+    UserCreate
+
+    **username**: str
+    **email**: EmailStr
+    **password**: str
+
+    Args:
+        user (UserCreate): User input these details
+        db (Session, optional): db instance. Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: 208 if email or username is already present
+
+    Returns:
+        UserOut: returns user details
+    """
     if user_data := db.query(User).filter(User.email == user.email).first():
         raise HTTPException(
             status_code=status.HTTP_208_ALREADY_REPORTED,
@@ -43,7 +61,20 @@ def get_user(
     username: str,
     db: Session = Depends(get_db),
     token: str = Depends(optional_oauth2_scheme),
-):
+) -> Union[UserCreate, UserOut]:
+    """Get user details
+
+    Args:
+        username (str): name of the user
+        db (Session, optional): db instance. Defaults to Depends(get_db).
+        token (str, optional): access token. Defaults to Depends(optional_oauth2_scheme).
+
+    Raises:
+        HTTPException: 404 if not found
+
+    Returns:
+        UserCreate | UserOut: User details, if current user then email is also returned.
+    """
     if user := db.query(User).filter(User.username == username).first():
         current_user = get_current_user(token, db)
         if not current_user or current_user.username != username:
